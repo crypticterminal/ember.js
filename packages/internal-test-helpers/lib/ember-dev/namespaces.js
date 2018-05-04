@@ -11,7 +11,7 @@ NamespacesAssert.prototype = {
   assert: function() {
     let { assert } = QUnit.config.current;
 
-    if (NAMESPACES.length > 0 || Object.keys(NAMESPACES_BY_ID).length > 0) {
+    if (NAMESPACES.length > 0) {
       assert.ok(false, 'Should not have any NAMESPACES after tests');
       run(() => {
         let namespaces = NAMESPACES.slice();
@@ -19,6 +19,13 @@ NamespacesAssert.prototype = {
           namespaces[i].destroy();
         }
       });
+    }
+    let keys = Object.keys(NAMESPACES_BY_ID);
+    if (keys.length > 0) {
+      assert.ok(false, 'Should not have any NAMESPACES_BY_ID after tests');
+      for (let i = 0; i < keys.length; i++) {
+        delete NAMESPACES_BY_ID[keys[i]];
+      }
     }
   },
   restore: function() {},

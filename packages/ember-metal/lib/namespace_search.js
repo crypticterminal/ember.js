@@ -33,13 +33,11 @@ export function addNamespace(namespace) {
 }
 
 export function removeNamespace(namespace) {
-  let id = namespace.toString();
-  if (typeof id === 'string') {
-    delete NAMESPACES_BY_ID[id];
-    NAMESPACES.splice(NAMESPACES.indexOf(namespace), 1);
-    if (id in context.lookup && namespace === context.lookup[id]) {
-      context.lookup[id] = undefined;
-    }
+  let name = getName(namespace);
+  delete NAMESPACES_BY_ID[name];
+  NAMESPACES.splice(NAMESPACES.indexOf(namespace), 1);
+  if (name in context.lookup && namespace === context.lookup[name]) {
+    context.lookup[name] = undefined;
   }
 }
 
@@ -116,7 +114,10 @@ export function setUnprocessedMixins() {
 function _processNamespace(paths, root, seen) {
   let idx = paths.length;
 
-  NAMESPACES_BY_ID[paths.join('.')] = root;
+  let id = paths.join('.');
+
+  NAMESPACES_BY_ID[id] = root;
+  setName(root, id);
 
   // Loop over all of the keys in the namespace, looking for classes
   for (let key in root) {
@@ -143,7 +144,6 @@ function _processNamespace(paths, root, seen) {
         continue;
       }
       seen.add(obj);
-
       // Process the child namespace
       _processNamespace(paths, obj, seen);
     }

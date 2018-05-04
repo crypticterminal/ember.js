@@ -232,11 +232,7 @@ moduleFor(
     }
 
     [`@test acts like a namespace`](assert) {
-      let lookup = (context.lookup = {});
-
-      lookup.TestApp = this.application = this.runTask(() => this.createApplication());
-
-      setNamespaceSearchDisabled(false);
+      this.application = this.runTask(() => this.createApplication());
       let Foo = (this.application.Foo = EmberObject.extend());
       assert.equal(Foo.toString(), 'TestApp.Foo', 'Classes pick up their parent namespace');
     }
