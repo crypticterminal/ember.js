@@ -1,4 +1,3 @@
-/* globals QUnit */
 /* eslint-disable no-console */
 'use strict';
 
@@ -44,18 +43,19 @@ function runInBrowser(url, retries, resolve, reject) {
   console.log('Running Chrome headless: ' + url);
 
   if (!browserPromise) {
-    browserPromise = puppeteer.launch();
+    browserPromise = puppeteer.launch({
+      args: ['--js-flags=--allow-natives-syntax --expose-gc'],
+    });
   }
 
   browserPromise.then(function(browser) {
     browser.newPage().then(function(page) {
-      /* globals window */
       var crashed;
 
       page.on('console', function(msg) {
-        console.log(msg.text);
+        console.log(msg.text());
 
-        result.output.push(msg.text);
+        result.output.push(msg.text());
       });
 
       page.on('error', function(err) {
@@ -68,86 +68,6 @@ function runInBrowser(url, retries, resolve, reject) {
         result.errors.push(string);
         console.error(chalk.red(string));
       });
-
-      var addLogging = function() {
-        window.document.addEventListener('DOMContentLoaded', function() {
-          var testsTotal = 0;
-          var testsPassed = 0;
-          var testsFailed = 0;
-          var currentTestAssertions = [];
-
-          QUnit.log(function(details) {
-            var response;
-
-            // Ignore passing assertions
-            if (details.result) {
-              return;
-            }
-
-            response = details.message || '';
-
-            if (typeof details.expected !== 'undefined') {
-              if (response) {
-                response += ', ';
-              }
-
-              response += 'expected: ' + details.expected + ', but was: ' + details.actual;
-            }
-
-            if (details.source) {
-              response += '\n' + details.source;
-            }
-
-            currentTestAssertions.push('Failed assertion: ' + response);
-          });
-
-          QUnit.testDone(function(result) {
-            var i,
-              len,
-              name = '';
-
-            if (result.module) {
-              name += result.module + ': ';
-            }
-            name += result.name;
-
-            testsTotal++;
-
-            if (result.failed) {
-              testsFailed++;
-              console.log('\n' + 'Test failed: ' + name);
-
-              for (i = 0, len = currentTestAssertions.length; i < len; i++) {
-                console.log('    ' + currentTestAssertions[i]);
-              }
-            } else {
-              testsPassed++;
-            }
-
-            currentTestAssertions.length = 0;
-          });
-
-          QUnit.done(function(result) {
-            console.log(
-              '\n' +
-                'Took ' +
-                result.runtime +
-                'ms to run ' +
-                testsTotal +
-                ' tests. ' +
-                testsPassed +
-                ' passed, ' +
-                testsFailed +
-                ' failed.'
-            );
-
-            window.callPhantom({
-              name: 'QUnit.done',
-              data: result,
-            });
-          });
-        });
-      };
 
       return page
         .exposeFunction('callPhantom', function(message) {
@@ -184,10 +104,12 @@ function runInBrowser(url, retries, resolve, reject) {
             }
           }
         })
-        .then(function() {
-          return page.evaluateOnNewDocument(addLogging);
+        .then(() => {
+          return page.evaluateOnNewDocument(
+            fs.readFileSync(__dirname + '/run-tests-injection.js', 'utf8')
+          );
         })
-        .then(function() {
+        .then(() => {
           return page.goto(url, { timeout: 900 });
         });
     });

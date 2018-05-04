@@ -16,16 +16,18 @@ ContainersAssert.prototype = {
     config.current.finish = function() {
       originalFinish.call(this);
       originalFinish = undefined;
-      config.queue.unshift(function() {
-        if (containerLeakTracking.hasContainers()) {
-          containerLeakTracking.reset();
-          // eslint-disable-next-line no-console
-          console.assert(
-            false,
-            `Leaked container after test ${moduleName}: ${testName} testId=${testId}`
-          );
-        }
-      });
+      if (containerLeakTracking.hasContainers()) {
+        containerLeakTracking.reset();
+        QUnit.test(
+          'Leaked Container',
+          Object.assign(
+            assert => {
+              assert.ok(false, `${moduleName}: ${testName} testId=${testId}`);
+            },
+            { validTest: true }
+          )
+        );
+      }
     };
   },
   restore: function() {},
