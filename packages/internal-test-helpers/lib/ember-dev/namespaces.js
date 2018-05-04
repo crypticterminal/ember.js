@@ -1,5 +1,5 @@
 import { run } from '@ember/runloop';
-import { NAMESPACES } from 'ember-metal';
+import { NAMESPACES, NAMESPACES_BY_ID } from 'ember-metal';
 
 function NamespacesAssert(env) {
   this.env = env;
@@ -11,7 +11,7 @@ NamespacesAssert.prototype = {
   assert: function() {
     let { assert } = QUnit.config.current;
 
-    if (NAMESPACES.length > 0) {
+    if (NAMESPACES.length > 0 || Object.keys(NAMESPACES_BY_ID).length > 0) {
       assert.ok(false, 'Should not have any NAMESPACES after tests');
       run(() => {
         let namespaces = NAMESPACES.slice();

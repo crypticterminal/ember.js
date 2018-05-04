@@ -34,14 +34,13 @@ export function addNamespace(namespace) {
 
 export function removeNamespace(namespace) {
   let id = namespace.toString();
-  if (id) {
+  if (typeof id === 'string') {
     delete NAMESPACES_BY_ID[id];
-    if (namespace === context.lookup[id]) {
+    NAMESPACES.splice(NAMESPACES.indexOf(namespace), 1);
+    if (id in context.lookup && namespace === context.lookup[id]) {
       context.lookup[id] = undefined;
     }
   }
-
-  NAMESPACES.splice(NAMESPACES.indexOf(namespace), 1);
 }
 
 export function findNamespaces() {
